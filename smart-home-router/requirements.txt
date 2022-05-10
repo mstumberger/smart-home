@@ -1,0 +1,4 @@
+requests
+twisted-mqtt
+autobahn[twisted]
+autobahn[asyncio]

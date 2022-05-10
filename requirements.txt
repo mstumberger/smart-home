@@ -1,0 +1,15 @@
+# install Crossbar
+# sudo apt-get update
+# sudo apt-get -y install build-essential libssl-dev libffi-dev \                                                                                                                                                                                          27.6s  pon 02 maj 2022 17:07:22
+#                                    libreadline-dev libbz2-dev libsqlite3-dev libncurses5-dev \
+#                                    libsnappy-dev libunwind-dev
+# sudo add-apt-repository ppa:deadsnakes/ppa
+# sudo apt install python3.9
+# sudo apt install python3.9-dev
+# python3.9 get-pip.py
+crossbar
+Werkzeug==2.0.3
+Django==4.0.4
+djangorestframework
+markdown
+django-filter

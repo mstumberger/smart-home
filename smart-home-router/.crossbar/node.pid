@@ -1,0 +1,21 @@
+{
+    "pid": 393060, 
+    "argv": [
+        "/home/mstumberger/.local/bin/crossbar", 
+        "start"
+    ], 
+    "options": {
+        "debug_lifecycle": false, 
+        "debug_programflow": false, 
+        "command": "start", 
+        "color": "auto", 
+        "loglevel": "info", 
+        "logformat": "standard", 
+        "logdir": null, 
+        "logtofile": false, 
+        "cbdir": "/home/mstumberger/Personal/untitled/smart-home-router/.crossbar", 
+        "config": "config.json", 
+        "shutdownafter": null, 
+        "vmprof": false
+    }
+}
