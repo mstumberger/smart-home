@@ -1,3 +1,24 @@
+# SmarTHome Project
+>## Current state
+>---
+>>### Server
+>>- RPC function temp(temp)
+    >> Saves temperature to database with current date and time
+>>
+>### Client for BananaPro
+>>- RPC function to server (temp)
+    >> Reads temperature in a loop and sends value to server
+>>
+>
+---
+# TODO
+>>- Switch relay on/off
+>>- Web front end
+>>
+>
+---
+
+
 1. postavi router:
    sudo apt-get update
    sudo apt-get -y install build-essential libssl-dev libffi-dev \
@@ -69,6 +90,35 @@ scp smart-home-python-client/SmartHome/client/relay.py pi@192.168.88.250:/home/p
 sudo apt -y install rustc
 sudo apt -y install build-essential libssl-dev libffi-dev \
 python3-dev rustc cargo
+
+
+
+
+GPIO interupts
+https://roboticsbackend.com/raspberry-pi-gpio-interrupts-tutorial/
+
+
+https://realpython.com/python-interface/
+za settinge
+
+
+
+                        "callsigned": {
+                            "type": "caller",
+                            "realm": "realm1",
+                            "role": "anonymous",
+                            "options": {
+                                "key": "foobar",
+                                "secret": "secret",
+                                "post_body_limit": 8192,
+                                "timestamp_delta_limit": 10,
+                                "require_ip": [
+                                    "192.168.1.1/255.255.255.0",
+                                    "127.0.0.1"
+                                ],
+                                "require_tls": false
+                            }
+                        },
 
 
 

@@ -14,10 +14,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from smart_home import views
+from django.urls import path, include
+
+from EventLog.views import EventViewset
+from SmartHome import views as clients
 
 urlpatterns = [
+    path('api-auth/', include('rest_framework.urls')),
     path('admin/', admin.site.urls),
-    path('clients/', views.clients, name='clients')
+    path('eventLog/', EventViewset.as_view({'get': 'list'})),
+    path('clients/', clients.clients, name='clients')
 ]

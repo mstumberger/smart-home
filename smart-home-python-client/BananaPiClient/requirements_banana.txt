@@ -1,0 +1,4 @@
+autobahn
+twisted
+git+https://github.com/LeMaker/RPi.GPIO_BP
+service-identity

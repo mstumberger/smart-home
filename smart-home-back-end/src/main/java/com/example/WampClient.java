@@ -7,23 +7,13 @@ import java.util.logging.Logger;
 
 import io.crossbar.autobahn.wamp.Client;
 import io.crossbar.autobahn.wamp.Session;
-import io.crossbar.autobahn.wamp.types.CallResult;
-import io.crossbar.autobahn.wamp.types.CloseDetails;
-import io.crossbar.autobahn.wamp.types.ExitInfo;
-import io.crossbar.autobahn.wamp.types.InvocationDetails;
-import io.crossbar.autobahn.wamp.types.Publication;
-import io.crossbar.autobahn.wamp.types.PublishOptions;
-import io.crossbar.autobahn.wamp.types.Registration;
-import io.crossbar.autobahn.wamp.types.SessionDetails;
-import io.crossbar.autobahn.wamp.types.Subscription;
+import io.crossbar.autobahn.wamp.types.*;
 import org.springframework.stereotype.Component;
 
 
 @Component
 public class WampClient {
     private static final Logger LOGGER = Logger.getLogger(WampClient.class.getName());
-    private static final String PROC_ADD2 = "example.add2";
-    private static final String TOPIC_COUNTER = "example.oncounter";
 
     /**
      * Main entry point of the example
@@ -64,20 +54,38 @@ public class WampClient {
     }
 
     private void onJoinCallback(Session session, SessionDetails details) {
+
+        List<String> topics = List.of("services_status", "smart.home.clients.updates");
+        SubscribeOptions subscribeOptions = new SubscribeOptions();
+
+        topics.forEach(topic -> {
+            // Subscribe to topic to receive its events.
+            CompletableFuture<Subscription> subFuture = session.subscribe(topic,
+                    this::onEvent);
+            subFuture.whenComplete((subscription, throwable) -> {
+                if (throwable == null) {
+                    // We have successfully subscribed.
+                    System.out.println("Subscribed to topic " + subscription.topic);
+                } else {
+                    // Something went bad.
+                    throwable.printStackTrace();
+                }
+            });
+        });
+
+
+/*
         CompletableFuture<Registration> regFuture = session.register(PROC_ADD2, this::add2);
         regFuture.thenAccept(reg -> LOGGER.info("Registered procedure: example.add2"));
 
-        CompletableFuture<Subscription> subFuture = session.subscribe(
-                TOPIC_COUNTER, this::onCounter);
-        subFuture.thenAccept(subscription ->
-                LOGGER.info(String.format("Subscribed to topic: %s", subscription.topic)));
 
         final int[] x = {0};
         final int[] counter = {0};
 
         final PublishOptions publishOptions = new PublishOptions(true, false);
+*/
 
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+/*        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
 
             // here we CALL every second
@@ -102,7 +110,7 @@ public class WampClient {
                 }
             });
 
-        }, 0, 2, TimeUnit.SECONDS);
+        }, 0, 2, TimeUnit.SECONDS);*/
     }
 
     private void onLeaveCallback(Session session, CloseDetails detail) {
@@ -121,5 +129,10 @@ public class WampClient {
     private void onCounter(List<Object> args) {
         LOGGER.info(String.format("oncounter event, counter value=%s from component %s (%s)",
                 args.get(0), args.get(1), args.get(2)));
+    }
+
+
+    private void onEvent(List<Object> args, EventDetails details) {
+        System.out.println(String.format("Got event: %s", args.get(0)));
     }
 }

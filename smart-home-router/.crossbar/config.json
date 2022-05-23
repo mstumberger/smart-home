@@ -18,16 +18,31 @@
                     "name": "realm1",
                     "roles": [
                         {
-                            "name": "anonymous",
+                            "name": "authenticator",
                             "permissions": [
                                 {
-                                    "uri": "",
-                                    "match": "prefix",
+                                    "uri": "authenticate",
+                                    "match": "exact",
                                     "allow": {
                                         "call": true,
                                         "register": true,
-                                        "publish": true,
-                                        "subscribe": true
+                                        "publish": false,
+                                        "subscribe": false
+                                    },
+                                    "disclose": {
+                                        "caller": false,
+                                        "publisher": false
+                                    },
+                                    "cache": true
+                                },
+                                {
+                                    "uri": "backend.get_user",
+                                    "match": "exact",
+                                    "allow": {
+                                        "call": true,
+                                        "register": false,
+                                        "publish": false,
+                                        "subscribe": false
                                     },
                                     "disclose": {
                                         "caller": false,
@@ -38,7 +53,83 @@
                             ]
                         },
                         {
+                            "name": "public",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "allow": {
+                                        "call": true,
+                                        "register": true,
+                                        "publish": true,
+                                        "subscribe": true
+                                    },
+                                    "disclose": {
+                                        "caller": true,
+                                        "publisher": true
+                                    },
+                                    "cache": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "user",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "allow": {
+                                        "call": true,
+                                        "register": true,
+                                        "publish": true,
+                                        "subscribe": true
+                                    },
+                                    "disclose": {
+                                        "caller": true,
+                                        "publisher": true
+                                    },
+                                    "cache": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "admin",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "allow": {
+                                        "call": true,
+                                        "register": true,
+                                        "publish": true,
+                                        "subscribe": true
+                                    },
+                                    "disclose": {
+                                        "caller": true,
+                                        "publisher": true
+                                    },
+                                    "cache": true
+                                }
+                            ]
+                        },
+                        {
                             "name": "forwarder",
+                            "permissions": [
+                                {
+                                    "uri": "*",
+                                    "allow": {
+                                        "call": true,
+                                        "register": true,
+                                        "publish": true,
+                                        "subscribe": true
+                                    },
+                                    "disclose": {
+                                        "caller": true,
+                                        "publisher": true
+                                    },
+                                    "cache": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "service",
                             "permissions": [
                                 {
                                     "uri": "*",
@@ -112,19 +203,53 @@
                                         "memory_level": 5
                                     }
                                 }
+                            },
+                            "auth": {
+                                "wampcra": {
+                                    "type": "dynamic",
+                                    "authenticator": "authenticate"
+                                },
+                                "anonymous": {
+                                    "type": "static",
+                                    "role": "public"
+                                }
                             }
-                        },
-                        "info": {
-                            "type": "nodeinfo"
-                        },
-                        "notify": {
-                            "type": "publisher",
-                            "realm": "realm1",
-                            "role": "anonymous"
                         },
                         "static": {
                             "type": "static",
                             "directory": "../../smart-home-back-end-django/static"
+                        },
+                        "info": {
+                            "type": "nodeinfo"
+                        },
+                        "meta": {
+                            "type": "static",
+                            "directory": "../metaAPI"
+                        },
+                        "caller": {
+                            "type": "caller",
+                            "realm": "realm1",
+                            "role": "anonymous",
+                            "options": {
+                                "debug": true
+                            }
+                        },
+                        "callsigned": {
+                            "type": "caller",
+                            "realm": "realm1",
+                            "role": "anonymous",
+                            "options": {
+                                "key": "foobar",
+                                "secret": "secret",
+                                "post_body_limit": 8192,
+                                "timestamp_delta_limit": 10,
+                                "require_tls": false
+                            }
+                        },
+                        "notify": {
+                            "type": "publisher",
+                            "realm": "realm1",
+                            "role": "service"
                         }
                     }
                 },                {
@@ -135,7 +260,7 @@
                     },
                     "options": {
                         "realm": "realm1",
-                        "role": "anonymous",
+                        "role": "public",
                         "payload_mapping": {
                             "": {
                                 "type": "passthrough"
@@ -147,9 +272,15 @@
             "components": [
                 {
                     "type": "class",
+                    "classname": "workers.authenticator.AuthenticatorSession",
+                    "realm": "realm1",
+                    "role": "authenticator"
+                },
+                {
+                    "type": "class",
                     "classname": "backend.AppSession",
                     "realm": "realm1",
-                    "role": "anonymous"
+                    "role": "public"
                 }
             ]
         },

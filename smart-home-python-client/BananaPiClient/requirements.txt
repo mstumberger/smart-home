@@ -1,0 +1,4 @@
+autobahn
+twisted
+RPi.GPIO
+service-identity

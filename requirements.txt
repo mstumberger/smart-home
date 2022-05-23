@@ -11,5 +11,8 @@ crossbar
 Werkzeug==2.0.3
 Django==4.0.4
 djangorestframework
+django-filter
 markdown
 django-filter
+RPi.GPIO
+picamera
