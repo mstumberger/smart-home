@@ -194,7 +194,7 @@ class ClientSession(ApplicationSession):
                 try:
                     # Every time we loop, we get the stats for our machine
                     stats = {'ip': self.ip, 'name': self.client.name}
-                    stats.update()
+                    stats.update(get_stats())
 
                     # If we are requested to send the stats, we publish them using WAMP.
                     if self.client.publish_status:

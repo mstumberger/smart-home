@@ -7,12 +7,12 @@
 # sudo apt install python3.9
 # sudo apt install python3.9-dev
 # python3.9 get-pip.py
-crossbar
-Werkzeug==2.0.3
+#crossbar
+#Werkzeug==2.0.3
 Django==4.0.4
 djangorestframework
 django-filter
 markdown
 django-filter
-RPi.GPIO
-picamera
+#RPi.GPIO
+#picamera

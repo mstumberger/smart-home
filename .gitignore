@@ -33,3 +33,5 @@ build/
 .vscode/
 /*/venv
 smart-home-python-client/rpy data
+/smart-home-front-end/node_modules/
+/smart-home-front-end/.idea/

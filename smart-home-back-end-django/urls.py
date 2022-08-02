@@ -17,11 +17,23 @@ from django.contrib import admin
 from django.urls import path, include
 
 from EventLog.views import EventViewset
-from SmartHome import views as clients
+from SmartHome.views import DashboardViewSet, SensorViewSet, clients, ClientsViewSet
 
 urlpatterns = [
+    # https://www.django-rest-framework.org/#example
     path('api-auth/', include('rest_framework.urls')),
     path('admin/', admin.site.urls),
-    path('eventLog/', EventViewset.as_view({'get': 'list'})),
-    path('clients/', clients.clients, name='clients')
+    path('eventLog/', EventViewset.as_view(
+        {'get': 'list', 'post': 'create', 'put': 'destroy', 'delete': 'destroy'}
+    )),
+    path('dashboard/', DashboardViewSet.as_view(
+        {'get': 'list', 'post': 'create', 'put': 'destroy', 'delete': 'destroy'}
+    ), name='dashboard'),
+    path('sensors/', SensorViewSet.as_view(
+        {'get': 'list', 'post': 'create', 'put': 'destroy', 'delete': 'destroy'}
+    ), name='dashboard'),
+    path('clients/', ClientsViewSet.as_view(
+        {'get': 'list', 'post': 'create', 'put': 'destroy', 'delete': 'destroy'}
+    ), name='clients')
+    #path('clients/', clients, name='clients')
 ]
