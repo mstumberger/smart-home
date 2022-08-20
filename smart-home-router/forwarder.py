@@ -146,7 +146,7 @@ class Component(ApplicationSession):
 
 if __name__ == '__main__':
     from autobahn.twisted.wamp import ApplicationRunner
-    runner = ApplicationRunner(url=u"ws://{}:8080/ws".format(host), realm=u"realm1")
+    runner = ApplicationRunner(url=u"ws://{}:8082/ws".format(host), realm=u"realm1")
     try:
         runner.run(Component, auto_reconnect=True)
     except Exception as e:

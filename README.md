@@ -122,3 +122,4 @@ za settinge
 
 
 
+manage.py collectstatic

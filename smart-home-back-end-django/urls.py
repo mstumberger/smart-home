@@ -15,25 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
-from EventLog.views import EventViewset
-from SmartHome.views import DashboardViewSet, SensorViewSet, clients, ClientsViewSet
+from rest_framework.urlpatterns import format_suffix_patterns
+from SmartHome.urls import router as api_router
 
 urlpatterns = [
     # https://www.django-rest-framework.org/#example
     path('api-auth/', include('rest_framework.urls')),
     path('admin/', admin.site.urls),
-    path('eventLog/', EventViewset.as_view(
-        {'get': 'list', 'post': 'create', 'put': 'destroy', 'delete': 'destroy'}
-    )),
-    path('dashboard/', DashboardViewSet.as_view(
-        {'get': 'list', 'post': 'create', 'put': 'destroy', 'delete': 'destroy'}
-    ), name='dashboard'),
-    path('sensors/', SensorViewSet.as_view(
-        {'get': 'list', 'post': 'create', 'put': 'destroy', 'delete': 'destroy'}
-    ), name='dashboard'),
-    path('clients/', ClientsViewSet.as_view(
-        {'get': 'list', 'post': 'create', 'put': 'destroy', 'delete': 'destroy'}
-    ), name='clients')
-    #path('clients/', clients, name='clients')
+    path('api/', include((api_router.urls, 'SmartHome'), namespace='rest_framework_api')),
 ]

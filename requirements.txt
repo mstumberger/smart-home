@@ -16,3 +16,4 @@ markdown
 django-filter
 #RPi.GPIO
 #picamera
+jsonfield

@@ -30,7 +30,7 @@ public class WampClient {
     }
 
     public WampClient() throws ExecutionException, InterruptedException {
-        this("ws://localhost:8080/ws", "realm1");
+        this("ws://localhost:8082/ws", "realm1");
     }
 
     public WampClient(String url, String realm) throws ExecutionException, InterruptedException {

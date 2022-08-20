@@ -167,7 +167,7 @@
                     "type": "web",
                     "endpoint": {
                         "type": "tcp",
-                        "port": 8080,
+                        "port": 8082,
                         "backlog": 1024
                     },
                     "paths": {
@@ -291,7 +291,7 @@
                 "-classpath",
                 "../smart-home-back-end/target/classes:../smart-home-back-end/target/dependency/*",
                 "com.example.WampClient",
-                "ws://127.0.0.1:8080/ws",
+                "ws://127.0.0.1:8082/ws",
                 "realm1"
             ],
             "options": {

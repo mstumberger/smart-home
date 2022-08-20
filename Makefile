@@ -27,7 +27,7 @@ publish: publish_toolchain publish_android publish_netty
 #
 crossbar:
 	docker run \
-		--rm -it -p 8080:8080 --name crossbar \
+		--rm -it -p 8082:8082 --name crossbar \
 		crossbario/crossbar
 
 python:
@@ -42,7 +42,7 @@ java:
 		-it --rm --link crossbar \
 		-v ${shell pwd}:/workspace \
 		crossbario/autobahn-java:netty \
-			/bin/bash -c "gradle installDist -PbuildPlatform=netty && DEMO_GALLERY_OPTS="-DlogLevel=INFO" demo-gallery/build/install/demo-gallery/bin/demo-gallery ws://crossbar:8080/ws"
+			/bin/bash -c "gradle installDist -PbuildPlatform=netty && DEMO_GALLERY_OPTS="-DlogLevel=INFO" demo-gallery/build/install/demo-gallery/bin/demo-gallery ws://crossbar:8082/ws"
 
 #
 # Toolchain

@@ -167,7 +167,7 @@ class AppSession(ApplicationSession):
         print(text, type, details)
         self.MESSAGES.append(text)
 
-    # curl -H "Content-Type: application/json" -d '{"procedure": "temp", "args": [3.4]}' http://127.0.0.1:8080/call
+    # curl -H "Content-Type: application/json" -d '{"procedure": "temp", "args": [3.4]}' http://127.0.0.1:8082/call
     @staticmethod
     def insert_temp(temp, humidity):
         print("INSERT INTO Temperatura (temp, humidity, time, date) VALUES ('%s','%s','%s','%s')" %

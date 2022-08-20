@@ -272,13 +272,13 @@ def signal_handler(sig, frame):
 if __name__ == '__main__':
 
     # Crossbar.io connection configuration
-    url = os.environ.get('CBURL', u'ws://192.168.0.20:8080/ws')
+    url = os.environ.get('CBURL', u'ws://192.168.0.20:8082/ws')
     realm = os.environ.get('CBREALM', u'realm1')
 
     # parse command line parameters
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--debug', action='store_true', help='Enable debug output.')
-    parser.add_argument('--url', dest='url', type=six.text_type, default=url, help='The router URL (default: "ws://192.168.1.120:8080/ws").')
+    parser.add_argument('--url', dest='url', type=six.text_type, default=url, help='The router URL (default: "ws://192.168.1.120:8082/ws").')
     parser.add_argument('--realm', dest='realm', type=six.text_type, default=realm, help='The realm to join (default: "realm1").')
 
     args = parser.parse_args()
