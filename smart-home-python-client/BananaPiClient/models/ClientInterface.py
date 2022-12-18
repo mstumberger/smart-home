@@ -2,6 +2,13 @@ from abc import ABC, abstractmethod
 
 
 class Client(ABC):
+    name = None
+    publish_status = False
+    loop_interval = 10
+    configured_modules = None
+    client_used_pins = None
+    board_type = None
+
     @abstractmethod
     def initialize_board(self):
         pass
@@ -30,6 +37,10 @@ class Client(ABC):
     def configure_pin(self, pin, sensor, pin_type):
         pass
 
+    @abstractmethod
+    def apply_config(self, config):
+        pass
+
 
 class NoopClient(Client):
     def initialize_board(self):
@@ -52,3 +63,11 @@ class NoopClient(Client):
 
     def configure_pin(self, pin, sensor, pin_type):
         print("configure_pin")
+
+    def apply_config(self, pin):
+        print("apply_config")
+
+    def read_sensors(self):
+        print("read_sensors, NOOP")
+        return None
+

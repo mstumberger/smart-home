@@ -3,12 +3,14 @@ from rest_framework.routers import DefaultRouter
 
 from EventLog.views import EventViewset
 from .views import (
-	DashboardViewSet, ModuleViewSet, ClientsViewSet, GPIOPinConfigViewSet, BoardTypeViewSet, ModuleWithClientViewSet)
+	DashboardViewSet, ModuleViewSet, ClientsViewSet, GPIOPinConfigViewSet, BoardTypeViewSet, ModuleWithClientViewSet,
+	AvailableModuleViewSet)
 
 
 router = DefaultRouter()
 router.register(r'event_log', EventViewset, basename='eventLog')
 router.register(r'dashboard', DashboardViewSet, basename='dashboard')
+router.register(r'available-modules', AvailableModuleViewSet, basename='available_modules')
 router.register(r'sensors', ModuleViewSet, basename='sensors')
 router.register(r'modules-detail', ModuleWithClientViewSet, basename='sensors')
 router.register(r'board_type', BoardTypeViewSet, basename='sensors')

@@ -7,21 +7,7 @@ from django.forms.models import model_to_dict
 
 import requests
 
-
-# "Raspberry Pi 2B": {
-#     image: "https://www.bigmessowires.com/wp-content/uploads/2018/05/Raspberry-GPIO.jpg",
-#     availablePins: [3,5,7,8,11,12,13,15,16,18,19,21,22,23,24,26,29,31,32,33,35,36,37,38,40],
-#     availableGPIOPins: [2,3,4,14,15,17,18,27,22,23,24,10,9,25,11,8,7,5,6,12,13,19,16,26,20,21]
-# },
-# "Banana Pro": {
-#     image: "https://www.bigmessowires.com/wp-content/uploads/2018/05/Raspberry-GPIO.jpg",
-#     availablePins: []
-# },
-# "ESP32": {
-#     image: "https://www.bigmessowires.com/wp-content/uploads/2018/05/Raspberry-GPIO.jpg",
-#     availablePins: []
-# }
-from rest_framework.fields import JSONField
+from SmartHome.constants import AVAILABLE_GPIO_INPUT_TYPES, AVAILABLE_MODULES_DICT
 
 AVAILABLE_BOARDS = (
     ('Raspberry Pi 2B', 'Raspberry Pi 2B'),
@@ -85,90 +71,9 @@ def notify_server_config_changed(sender, instance, **kwargs):
     requests.post("http://127.0.0.1:8082/notify",
                   json={
                       'topic': 'clientconfig.' + instance.ip,
-                      'args': [model_to_dict(instance)]
+                      'args': [{"client": model_to_dict(instance)}]
                   })
 
-
-AVAILABLE_GPIO_INPUT_TYPES = (
-    ('pull_up', 'pull_up'),
-    ('pull_down', 'pull_down'),
-)
-
-
-AVAILABLE_MODULES_DICT = [
-    {
-        'type': '1-channel-relay',
-        'displayName': 'Relay',
-        'powerPins': 1,
-        'groundPins': 1,
-        'signalPins': 1,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-    {
-        'type': '8-channel-relay',
-        'displayName': 'Relay-8',
-        'powerPins': 1,
-        'groundPins': 1,
-        'signalPins': 1,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-    {
-        'type': 'IRSensor',
-        'displayName': 'IRSensor',
-        'powerPins': 1,
-        'groundPins': 1,
-        'signalPins': 1,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-    {
-        'type': 'TemperatureSensorDallas',
-        'displayName': 'TemperatureSensorDallas',
-        'powerPins': 1,
-        'groundPins': 1,
-        'signalPins': 1,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-    {
-        'type': 'TemperatureSensorDH11',
-        'displayName': 'TemperatureSensorDH11',
-        'powerPins': 1,
-        'groundPins': 1,
-        'signalPins': 1,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-    {
-        'type': 'HumiditySensor',
-        'displayName': 'HumiditySensor',
-        'powerPins': 1,
-        'groundPins': 1,
-        'signalPins': 1,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-    {
-        'type': 'RFIDSensor',
-        'displayName': 'RFIDSensor',
-        'powerPins': 1,
-        'groundPins': 1,
-        'signalPins': 6,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-    {
-        'type': 'CO2Sensor',
-        'displayName': 'CO2Sensor',
-        'powerPins': 1,
-        'groundPins': 1,
-        'signalPins': 1,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-    {
-        'type': 'Led-Output',
-        'displayName': 'LedOutput',
-        'powerPins': 0,
-        'groundPins': 1,
-        'signalPins': 1,
-        'inputType': AVAILABLE_GPIO_INPUT_TYPES[0][0]
-    },
-]
 
 AVAILABLE_MODULES = map(lambda module: (module['type'], module['displayName']), AVAILABLE_MODULES_DICT)
 
@@ -191,18 +96,59 @@ class ConfiguredModule(models.Model):
     description = models.CharField(max_length=100)
 
     def __str__(self):
-        return f'{self.client} - {self.type.type} - {self.name} - {self.description}'
+        return f'{self.client} - {self.type} - {self.name} - {self.description}'
+
+
+@receiver(post_save, sender=ConfiguredModule, dispatch_uid="server_post_save")
+def notify_server_module_changed(sender, instance, **kwargs):
+    """ Notifies a client that its config has changed.
+
+        This function is executed when we save a Client model, and it
+        makes a POST request on the WAMP-HTTP bridge, allowing us to
+        make a WAMP publication from Django.
+    """
+    if instance.client is not None:
+        requests.post("http://127.0.0.1:8082/notify",
+                      json={
+                          'topic': 'clientconfig.' + instance.client.ip,
+                          'args': [{"module": model_to_dict(instance)}]
+                      })
+
+
+AVAILABLE_GPIO_PIN_TYPES = (
+    ("power", "+"),
+    ("ground", "-"),
+    ("signal", "$"),
+    ("i2c", "i²c"),
+)
 
 
 class GPIOPinConfig(models.Model):
     client = models.ForeignKey(Client, related_name='client_used_pins', on_delete=models.CASCADE, null=True)
     module = models.ForeignKey(ConfiguredModule, related_name='used_pins', on_delete=models.CASCADE, null=True)
+    type = models.CharField(max_length=20, choices=AVAILABLE_GPIO_PIN_TYPES, default='signal')
     pinModuleNumber = models.IntegerField(null=True)
     pin = models.IntegerField(null=True)
     gpioPin = models.IntegerField(null=True)
 
     def __str__(self):
         return f'{self.module} - Pin {self.pin}'
+
+
+@receiver(post_save, sender=GPIOPinConfig, dispatch_uid="server_post_save")
+def notify_server_pin_changed(sender, instance, **kwargs):
+    """ Notifies a client that its config has changed.
+
+        This function is executed when we save a Client model, and it
+        makes a POST request on the WAMP-HTTP bridge, allowing us to
+        make a WAMP publication from Django.
+    """
+    if instance.client is not None:
+        requests.post("http://127.0.0.1:8082/notify",
+                      json={
+                          'topic': 'clientconfig.' + instance.client.ip,
+                          'args': [{"pin": model_to_dict(instance)}]
+                      })
 
 
 class Dashboard(models.Model):

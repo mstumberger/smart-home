@@ -1,3 +1,6 @@
+from pprint import pprint
+
+import requests
 from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
 from autobahn.wamp import ApplicationError
 from twisted.internet.defer import inlineCallbacks
@@ -15,8 +18,6 @@ from models.ClientInterface import Client, NoopClient
 from models.helpers import to_gib, get_stats, is_raspberrypi
 from models.constants import REGISTER_OPTIONS, SUBSCRIBE_OPTIONS, TOPIC, PinType, Sensor
 
-import RPi.GPIO as GPIO
-import dht11
 try:
     from picamera import PiCamera
 except ImportError as e:
@@ -37,9 +38,6 @@ class RaspberryClientSettings(Client):
         self.publish_status = False
         self.loop_interval = 10
         self.board_mode = None
-        self.positive_pins = []
-        self.negative_pins = []
-        self.input_pin_list = [14]
 
         self.configured_io = {}
         self.configured_pins = {}
@@ -51,44 +49,54 @@ class RaspberryClientSettings(Client):
             self.camera = PiCamera()
 
     def apply_config(self, config):
-        self.set_board_mode(GPIO.BCM)
-        sensor_id = self.add_sensor("Relay_8", "Dnevna soba")
-        for i in self.output_pin_list:
-            self.configure_pin(i, sensor_id, PinType.OUTPUT)
-
-        sensor_id_temp = self.add_sensor("TemperatureSensorDH11", "Dnevna soba - okno")
-        for i in self.input_pin_list:
-            self.configure_pin(i, sensor_id_temp, PinType.INPUT)
+        # self.set_board_mode(GPIO.BCM)
+        self.configured_modules = config.pop('configured_modules', [])
+        self.client_used_pins = config.pop('client_used_pins', [])
+        self.board_type = config.pop('boardType', [])
+        pprint(self.configured_modules)
+        pprint(self.client_used_pins)
+        pprint(self.board_type)
+        pprint(config)
+        for configured_module in self.configured_modules:
+            sensor_id = self.add_sensor(configured_module)
+            if sensor_id is not None:
+                for i in configured_module['used_pins']:
+                    self.configure_pin(i, sensor_id, PinType.OUTPUT)
 
     def initialize_board(self):
-        GPIO.cleanup()
-        GPIO.setmode(self.board_mode)
-        GPIO.setwarnings(False)
+        # GPIO.cleanup()
+        # GPIO.setmode(self.board_mode)
+        # GPIO.setwarnings(False)
+        pass
 
     def set_board_mode(self, board_mode):
         self.board_mode = board_mode
         self.initialize_board()
 
     def add_input_callback(self, pin, callback):
-        GPIO.add_event_detect(pin, GPIO.BOTH, callback=callback, bouncetime=50)
+        # GPIO.add_event_detect(pin, GPIO.BOTH, callback=callback, bouncetime=50)
+        pass
 
     @staticmethod
     def button_callback(channel):
-        if not GPIO.input(14):
-            print("Button pressed!")
-        else:
-            print("Button released!")
+        # if not GPIO.input(14):
+        #     print("Button pressed!")
+        # else:
+        #     print("Button released!")
+        pass
 
     def initialize_temperature_reader_DHT(self, pin):
         # read data using pin 14
-        instance = dht11.DHT11(pin=pin)
-        self.reader_instances[pin] = instance
+        # instance = dht11.DHT11(pin=pin)
+        # self.reader_instances[pin] = instance
+        pass
 
     def change_output(self, pin,  value):
         print(f'Set pin {pin} value {value}')
-        GPIO.output(pin, GPIO.LOW if value else GPIO.HIGH)
+        # GPIO.output(pin, GPIO.LOW if value else GPIO.HIGH)
         sensor_id = None
         for sensor in self.configured_pins.keys():
+            print(sensor, self.configured_pins[sensor])
             if pin in self.configured_pins[sensor].keys():
                 sensor_id = sensor
                 break
@@ -96,9 +104,7 @@ class RaspberryClientSettings(Client):
         if sensor_id is not None:
             previous_value = self.configured_pins[sensor_id][pin]["value"]
             self.configured_pins[sensor_id][pin]["value"] = value
-            message = f"Change sensor {self.configured_io[sensor_id]} pin {pin} from {previous_value} to {value}"
-            print(message)
-            return message
+            print(f"Change sensor {self.configured_io[sensor_id]} pin {pin} from {previous_value} to {value}")
         else:
             print(f"Pin {pin} is not added to sensor")
 
@@ -112,28 +118,34 @@ class RaspberryClientSettings(Client):
             return result
         return None
 
-    def add_sensor(self, sensor_type, sensor_name):
-        sensor = Sensor.get_by_name(sensor_type)
+    def add_sensor(self, sensor_settings):
+        sensor_type = sensor_settings["type"]
+        if sensor_type is not None:
+            print(sensor_type)
+            sensor = Sensor.get_by_name(sensor_type["type"], sensor_settings['id'])
 
-        print("id", sensor.get_id())
-        sensor.value[0]["name"] = sensor_name
-        sensor_id = sensor.get_id()
-        self.configured_io[sensor_id] = sensor
-        self.configured_pins[sensor_id] = {}
-        return sensor.get_id()
-
-    def configure_pin(self, pin: int, sensor_id: str, pin_type: PinType):
-        GPIO.setup(pin, pin_type.get())
-        print(f'Set pin {pin} to type {pin_type}')
-        pin_value = {"number": pin, "name": f'Pin {pin}', "value": None, "board_mode": self.board_mode}
-        if pin_type == PinType.OUTPUT:
-            GPIO.output(pin, GPIO.HIGH)
-            pin_value.update(value=GPIO.HIGH)
-        elif pin_type == PinType.INPUT:
-            GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            print("Add sensor", sensor.get_details())
+            sensor.value[0]["name"] = sensor_settings["name"]
+            sensor_id = sensor.get_id()
+            self.configured_io[sensor_id] = sensor
+            self.configured_pins[sensor_id] = {}
+            return sensor.get_id()
         else:
-            print(f"{pin_type} not supported yet")
-        self.configured_pins[sensor_id][pin] = pin_value
+            print("Sensor type is None!?")
+            return None
+
+    def configure_pin(self, pin: dict, sensor_id: str, pin_type: PinType):
+        # GPIO.setup(pin, pin_type.get())
+        print(f'Set pin {pin} to type {pin_type}')
+        pin_value = {"pin": pin, "number": pin['pin'], "name": f'Pin {pin}', "value": None, "board_mode": self.board_mode}
+        # if pin_type == PinType.OUTPUT:
+        #     GPIO.output(pin, GPIO.HIGH)
+        #     pin_value.update(value=GPIO.HIGH)
+        # elif pin_type == PinType.INPUT:
+        #     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        # else:
+        #     print(f"{pin_type} not supported yet")
+        self.configured_pins[sensor_id][pin['id']] = pin_value
 
     @inlineCallbacks
     def take_picture(self):
@@ -152,7 +164,7 @@ class ClientSession(ApplicationSession):
         self.log = txaio.make_logger()
         self.ip = config.extra.get('config', None).get('ip', None)
         self.log.info(f'Client ip {self.ip}')
-        self.client = RaspberryClientSettings() if is_raspberrypi() else NoopClient()
+        self.client = RaspberryClientSettings()     # if is_raspberrypi() else NoopClient()
 
     def onConnect(self):
         self.log.info("Client connected")
@@ -164,8 +176,11 @@ class ClientSession(ApplicationSession):
 
     def onClose(self, was_clean):
         self.log.info("Client disconnected")
-        GPIO.cleanup()
+        # GPIO.cleanup()
         return super().onClose(was_clean)
+
+    def client_config_changed(self, msg):
+        print(msg)
 
     @inlineCallbacks
     def onJoin(self, details):
@@ -174,13 +189,17 @@ class ClientSession(ApplicationSession):
         response = yield self.call('add_client', details.session, f'RaspberryPi-{self.ip}', self.ip)
         print(response)
         # get client configs
-        self.client.apply_config({})
+        config = requests.get("http://localhost:8082/api/clients").json()
+        self.client.apply_config(config[0])
 
         yield self.register(self.get_available_sensors, f'relay.{self.ip}.get.all.sensors', options=REGISTER_OPTIONS)
         yield self.register(self.get_added_sensors, f'relay.{self.ip}.get.added.sensors', options=REGISTER_OPTIONS)
         yield self.register(self.get_configured_pins, f'relay.{self.ip}.get.configured.pins', options=REGISTER_OPTIONS)
         yield self.register(self.configure_pin, f'relay.{self.ip}.configue.pin', options=REGISTER_OPTIONS)
         yield self.register(self.high, f'relay.{self.ip}.toggle', options=REGISTER_OPTIONS)
+        sub = yield self.subscribe(self.client_config_changed, f'clientconfig.{config[0]["ip"]}')
+        print(f'Subscribed to topic: clientconfig.{self.ip}')
+
         try:
             # config = yield self.call('backend.getTerminalConfig', self.ip)
             # if config.get('ip', None) != (None or ''):
@@ -238,21 +257,22 @@ class ClientSession(ApplicationSession):
 
     def high(self, pin, value: bool, details=None):
         print(pin, value)
-        if pin in self.client.output_pin_list:
+        if pin in self.client.board_type['availablePins']:
             self.client.change_output(pin, value)
             self.publish(TOPIC, f'Set pin {pin}  value {value} -> DONE')
+            print(TOPIC, f'Set pin {pin}  value {value} -> DONE')
             return "Done"
         else:
-            print(f'Pin {pin} is not in the list {self.client.output_pin_list}')
+            print(f'Pin {pin} is not in the list {self.client.board_type["availablePins"]}')
 
     def configure_pin(self, pin, sensor, pin_type):
         pin_type_enum: PinType = PinType.get_type(pin_type)
         self.log.info(f'Configure pin {pin} as {pin_type_enum} for sensor {sensor}')
-        self.client.configure_pin(pin, sensor, pin_type)
+        self.client.configure_pin(pin, sensor, pin_type_enum)
 
-    def add_sensor(self, sensor_type, sensor_name):
-        self.log.info(f'Add sensor {sensor_name} with name {sensor_name}')
-        self.client.add_sensor(sensor_type, sensor_name)
+    def add_sensor(self, sensor_settings):
+        self.log.info(f'Add sensor {sensor_settings["type"]} with name {sensor_settings["name"]}')
+        self.client.add_sensor(sensor_settings)
 
     def onLeave(self, details):
         self.log.info("Router session closed ({details})", details=details)
@@ -272,7 +292,7 @@ def signal_handler(sig, frame):
 if __name__ == '__main__':
 
     # Crossbar.io connection configuration
-    url = os.environ.get('CBURL', u'ws://192.168.0.20:8082/ws')
+    url = os.environ.get('CBURL', u'ws://localhost:8082/ws')
     realm = os.environ.get('CBREALM', u'realm1')
 
     # parse command line parameters
@@ -293,7 +313,7 @@ if __name__ == '__main__':
     s.connect(("8.8.8.8", 80))
 
     # any extra info we want to forward to our ClientSession (in self.config.extra)
-    extra = dict(config={'name': socket.gethostname(), 'ip': s.getsockname()[0]})
+    extra = dict(config={'name': socket.gethostname(), 'ip': "192.168.88.250"})
     s.close()
 
     # now actually run a WAMP client using our session class ClientSession

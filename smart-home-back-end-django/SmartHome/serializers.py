@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from SmartHome.models import ConfiguredModule, Dashboard, Client, GPIOPinConfig, BoardType, AvailableModule
 from User.models import User
 from rest_framework import serializers, serializers, viewsets
@@ -29,6 +31,7 @@ class AvailableModuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = AvailableModule
         fields = [
+            'id',
             'type',
             'power_pins',
             'ground_pins',
@@ -54,8 +57,13 @@ class ModuleSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        module_type = validated_data.pop('type', [])
         used_pins = validated_data.pop('used_pins', [])
         instance = ConfiguredModule.objects.create(**validated_data)
+        try:
+            instance.type = AvailableModule.objects.get(type__exact=module_type['type'])
+        except Exception as e:
+            print(e)
         try:
             for used_pin in used_pins:
                 used_pin_object = GPIOPinConfig.objects.create(client=instance.client, module=instance, **used_pin)
@@ -65,6 +73,7 @@ class ModuleSerializer(serializers.ModelSerializer):
             print(e)
 
         return instance
+
 
 # Serializers define the API representation.
 class ClientSerializerLite(serializers.ModelSerializer):
@@ -86,7 +95,6 @@ class ModuleWithClientSerializer(serializers.ModelSerializer):
             'name',
             'type',
             'description',
-            'pins',
             'used_pins',
         ]
 

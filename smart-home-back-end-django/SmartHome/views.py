@@ -8,11 +8,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.request import Request
 
-from SmartHome.models import Client, Dashboard, ConfiguredModule, GPIOPinConfig, BoardType, AVAILABLE_MODULES
+from SmartHome.models import Client, Dashboard, ConfiguredModule, GPIOPinConfig, BoardType, AVAILABLE_MODULES, \
+    AvailableModule
 from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 from SmartHome.serializers import DashboardSerializer, ModuleSerializer, ClientSerializer, GPIOPinConfigSerializer, \
-    BoardTypeSerializer, ModuleWithClientSerializer
+    BoardTypeSerializer, ModuleWithClientSerializer, AvailableModuleSerializer
 
 
 @csrf_exempt
@@ -38,25 +39,20 @@ class ClientsViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def get_used_pins(self, request: Request, pk=None):
         recent_users = ConfiguredModule.objects.all()
-
-        # page = self.paginate_queryset(recent_users)
-        # if page is not None:
-        #     serializer = self.get_serializer(page, many=True)
-        #     return self.get_paginated_response(serializer.data)
-        #
-        # serializer = self.get_serializer(recent_users, many=True)
         serializer = ModuleSerializer(recent_users, many=True)
         return Response(serializer.data)
+
+
+# ViewSets define the view behavior.
+class AvailableModuleViewSet(viewsets.ModelViewSet):
+    queryset = AvailableModule.objects.all()
+    serializer_class = AvailableModuleSerializer
 
 
 # ViewSets define the view behavior.
 class ModuleViewSet(viewsets.ModelViewSet):
     queryset = ConfiguredModule.objects.all()
     serializer_class = ModuleSerializer
-
-    @action(detail=False)
-    def get_module_types(self, request):
-        return Response(AVAILABLE_MODULES)
 
 
 # ViewSets define the view behavior.
